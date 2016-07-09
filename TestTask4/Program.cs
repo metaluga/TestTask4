@@ -10,6 +10,9 @@ namespace TestTask4
     {
         static void Main(string[] args)
         {
+
+            Data_In.distribute_tasks();
+
         }
     }
 }
