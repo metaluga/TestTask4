@@ -48,71 +48,90 @@ namespace TestTask4
 
             bool[] openChest = new bool[chest];
 
-            
-            problemAnswer = boxes_analyzer(myKey, myMap, openChest);
+
+            problemAnswer = boxes_analyzer(myKey, myMap, openChest, true);
 
             return problemAnswer;
         }
 
 
-        private static string boxes_analyzer(List<int> inKey, List<int>[] map, bool[] openedChest)
+        private static string boxes_analyzer(List<int> inKey, List<int>[] map, bool[] openedChest, bool first = false)
         {
+            if (first)
+            {
+                List<int> needKey = new List<int> { };
+                for (int i = 0; i < map.Length; i++)
+                    needKey.Add(map[i][0]);
+
+                for (int i = 0; i < map.Length; i++)
+                    for (int j = 2; j < map[i].Count; j++)
+                        needKey.Remove(map[i][j]);
+
+                foreach (int i in inKey)
+                    needKey.Remove(i);
+
+                if (needKey.Count > 0)
+                    return "IMPOSSIBLE";
+
+            }
+
+            List<int> weCanOpen = new List<int> { };
+
+            for(int i = 0; i < map.Length; i++)
+            {
+                if ((inKey.IndexOf(map[i][0]) != -1) && !(openedChest[i]))
+                    weCanOpen.Add(i);
+            }
 
             bool flag = true;
 
-            foreach (bool i in openedChest)
-                if (!(i))
-                {
-                    flag = false;
-                    break;
-                }
-
-            if (flag)
-                return "";
-
-            string qwerty;
-            List<int> chestOpened = new List<int> {};
-
-            for (int i = 0; i < map.Length; i++)
+            if (weCanOpen.Count == 0)
             {
-                if ((inKey.IndexOf(map[i][0]) >= 0) && !(openedChest[i]))
-                    chestOpened.Add(i);
+                foreach (bool i in openedChest)
+                    if (!(i))
+                    {
+                        flag = false;
+                        break;
+                    }
+                   
+                
+                if (flag)
+                    return "";
+                else
+                    return "IMPOSSIBLE";
             }
 
-            //sorting by the number of keys in the trunk
-            for(int d = chestOpened.Count/2; d>=1; d/=2)
-                for(int i = d; i < chestOpened.Count; i++)
-                    for(int j = i; j>=d && map[chestOpened[j]][1] > map[chestOpened[j-d]][1]; j -=d) //warning!!!
+            for (int d = weCanOpen.Count / 2; d >= 1; d /= 2)
+                for (int i = d; i < weCanOpen.Count; i++)
+                    for (int j = i; j >= d && map[weCanOpen[j]][1] > map[weCanOpen[j - d]][1]; j -= d)
                     {
-                        int tmp = chestOpened[j - d];
-                        chestOpened[j - d] = chestOpened[j];
-                        chestOpened[j] = tmp;
+                        int tmp = weCanOpen[j - d];
+                        weCanOpen[j - d] = weCanOpen[j];
+                        weCanOpen[j] = tmp;
                     }
 
-
-            while(chestOpened.Count > 0)
+            foreach (int i in weCanOpen)
             {
-                int tmp = chestOpened[0];
-                openedChest[tmp] = true;
-                chestOpened.Remove(tmp);
-
-                List<int> keyPlus = inKey;
-                keyPlus.Remove(map[tmp][1]);
-                for (int i = 2; i < map[tmp].Count; i++)
-                    keyPlus.Add(map[tmp][i]);
-
-                string result = boxes_analyzer(keyPlus, map, openedChest);
-
-                if (result.IndexOf("IMPOSSIBLE") == -1)
+                if ((map[weCanOpen[0]][1] > 0) && (map[i][0] == 0))
+                    return "IMPOSSIBLE";
+                openedChest[i] = true;
+                inKey.Remove(map[i][0]);
+                List<int> myNewKey = new List<int> { };
+                foreach (int k in inKey)
+                    myNewKey.Add(k);
+                for (int j = 2; j < map[i].Count; j++)
+                    myNewKey.Add(map[i][j]);
+                
+                string trying = boxes_analyzer(myNewKey, map, openedChest);
+                
+                if (trying.IndexOf("IMPOSSIBLE") == -1)
+                    return (i+1) + " " + trying;
+                else
                 {
-                    result = ++tmp + " " + result;
-                    return result;
+                    openedChest[i] = false;
+                    inKey.Add(map[i][0]);
                 }
-                    
-
-                openedChest[tmp] = false;
             }
-
 
             return "IMPOSSIBLE";
         }
