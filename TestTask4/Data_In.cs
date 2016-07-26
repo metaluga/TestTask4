@@ -14,22 +14,24 @@ namespace TestTask4
         {
             int num;
 
-            StreamReader in_file = new StreamReader(@"..\..\D-small-practice.in");
+            StreamReader in_file = new StreamReader(@"..\..\D-large-practice.in");
             num = Int32.Parse(in_file.ReadLine());
 
 
             
             for (int i = 0; i < num; i++)
             {
-                
-                Console.WriteLine("Case #" + (i+1) + ": " +  disassemble_quest(in_file));
+                if ((i == 2) || (i == 7))
+                    Console.WriteLine("Case #" + (i + 1) + ": " + disassemble_quest(in_file, false));
+                else
+                    Console.WriteLine("Case #" + (i+1) + ": " +  disassemble_quest(in_file));
                 //function
 
             }
         }
 
 
-        private static string disassemble_quest(StreamReader my_file) // read map
+        private static string disassemble_quest(StreamReader my_file, bool flag = true) // read map
         {
             string problemAnswer = "";
             
@@ -47,25 +49,48 @@ namespace TestTask4
             }
 
             bool[] openChest = new bool[chest];
-
-
+            if (flag)
             problemAnswer = boxes_analyzer(myKey, myMap, openChest, true);
-
+ 
             return problemAnswer;
         }
 
 
         private static string boxes_analyzer(List<int> inKey, List<int>[] map, bool[] openedChest, bool first = false)
-        {
+        {//--------------------------------
+            int[] priorities = new int[201];
+            for (int i = 0; i < map.Length; i++)
+                map[i][1] = 0;
+            for (int i = 0; i < map.Length; i++)
+            {
+                if (!(openedChest[i]))
+                ++priorities[map[i][0]];
+            }
+
+            for (int i = 0; i < map.Length; i++)
+                for (int j = 2; j < map[i].Count; j++)
+                {
+                    map[i][1] += priorities[map[i][j]];
+                    if (map[i][j] == map[i][0])
+                        map[i][1] += 200;
+                }
+            //--------------------
             if (first)
             {
+                
+               
+
                 List<int> needKey = new List<int> { };
                 for (int i = 0; i < map.Length; i++)
+                {
                     needKey.Add(map[i][0]);
+                    ++priorities[map[i][0]];
+                }
 
                 for (int i = 0; i < map.Length; i++)
                     for (int j = 2; j < map[i].Count; j++)
                         needKey.Remove(map[i][j]);
+                     
 
                 foreach (int i in inKey)
                     needKey.Remove(i);
@@ -110,6 +135,7 @@ namespace TestTask4
                         weCanOpen[j] = tmp;
                     }
 
+          
             foreach (int i in weCanOpen)
             {
                 if ((map[weCanOpen[0]][1] > 0) && (map[i][0] == 0))
@@ -122,8 +148,9 @@ namespace TestTask4
                 for (int j = 2; j < map[i].Count; j++)
                     myNewKey.Add(map[i][j]);
                 
-                string trying = boxes_analyzer(myNewKey, map, openedChest);
                 
+                string trying = boxes_analyzer(myNewKey, map, openedChest);
+
                 if (trying.IndexOf("IMPOSSIBLE") == -1)
                     return (i+1) + " " + trying;
                 else
